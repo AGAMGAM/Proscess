@@ -1614,3 +1614,39 @@ function bootNotifSystem(){
 </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>דוגמת Local Storage</title>
+</head>
+<body>
+
+    <h2>שמירת מידע בדפדפן</h2>
+    <input type="text" id="userInput" placeholder="הקלד משהו...">
+    <button onclick="saveData()">שמור מידע</button>
+    <p id="displayArea">המידע השמור יופיע כאן</p>
+
+    <script>
+        // 1. פונקציה לשמירת המידע
+        function saveData() {
+            const input = document.getElementById('userInput').value;
+            localStorage.setItem('mySavedText', input); // שמירה בזיכרון
+            displayData();
+        }
+
+        // 2. פונקציה להצגת המידע (קוראת מהזיכרון)
+        function displayData() {
+            const savedData = localStorage.getItem('mySavedText');
+            if (savedData) {
+                document.getElementById('displayArea').innerText = "מידע שמור: " + savedData;
+            }
+        }
+
+        // 3. הרצה אוטומטית כשהדף נטען מחדש
+        window.onload = displayData;
+    </script>
+
+</body>
+</html>

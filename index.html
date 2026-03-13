@@ -1619,33 +1619,85 @@ function bootNotifSystem(){
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>דוגמת Local Storage</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>האפליקציה שלי - שמירת נתונים</title>
+    <style>
+        /* עיצוב בסיסי כדי שיהיה נעים בעין */
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 300px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #218838; }
+        .status { margin-top: 20px; padding: 10px; border-top: 1px solid #eee; width: 100%; }
+        span { font-weight: bold; color: #007bff; }
+    </style>
 </head>
 <body>
 
-    <h2>שמירת מידע בדפדפן</h2>
-    <input type="text" id="userInput" placeholder="הקלד משהו...">
-    <button onclick="saveData()">שמור מידע</button>
-    <p id="displayArea">המידע השמור יופיע כאן</p>
+    <div class="card">
+        <h3>הגדרות פרופיל</h3>
+        
+        <label>שם מלא:</label>
+        <input type="text" id="nameInput" placeholder="הכנס שם...">
+
+        <label>גיל:</label>
+        <input type="number" id="ageInput" placeholder="הכנס גיל...">
+
+        <button onclick="saveToDevice()">שמור בטלפון שלי</button>
+
+        <div class="status">
+            <p>שם שמור: <span id="nameDisplay">---</span></p>
+            <p>גיל שמור: <span id="ageDisplay">---</span></p>
+        </div>
+    </div>
 
     <script>
-        // 1. פונקציה לשמירת המידע
-        function saveData() {
-            const input = document.getElementById('userInput').value;
-            localStorage.setItem('mySavedText', input); // שמירה בזיכרון
-            displayData();
+        // פונקציה שמופעלת ברגע שהדף נטען
+        window.onload = function() {
+            loadFromDevice();
+        };
+
+        // שמירת הנתונים
+        function saveToDevice() {
+            // 1. איסוף הנתונים מהשדות
+            const nameValue = document.getElementById('nameInput').value;
+            const ageValue = document.getElementById('ageInput').value;
+
+            // 2. יצירת אובייקט עם המידע
+            const userData = {
+                name: nameValue,
+                age: ageValue
+            };
+
+            // 3. הפיכת האובייקט לטקסט (JSON) ושמירה ב-LocalStorage
+            localStorage.setItem('user_app_data', JSON.stringify(userData));
+
+            // 4. עדכון התצוגה על המסך
+            updateDisplay(userData);
+            
+            alert("הנתונים נשמרו בהצלחה בזיכרון המכשיר!");
         }
 
-        // 2. פונקציה להצגת המידע (קוראת מהזיכרון)
-        function displayData() {
-            const savedData = localStorage.getItem('mySavedText');
-            if (savedData) {
-                document.getElementById('displayArea').innerText = "מידע שמור: " + savedData;
+        // טעינת הנתונים
+        function loadFromDevice() {
+            const rawData = localStorage.getItem('user_app_data');
+
+            if (rawData) {
+                // הפיכת הטקסט חזרה לאובייקט
+                const savedObject = JSON.parse(rawData);
+                updateDisplay(savedObject);
+                
+                // מילוי השדות באופן אוטומטי כדי שהמשתמש יראה מה שמר
+                document.getElementById('nameInput').value = savedObject.name;
+                document.getElementById('ageInput').value = savedObject.age;
             }
         }
 
-        // 3. הרצה אוטומטית כשהדף נטען מחדש
-        window.onload = displayData;
+        // עדכון הטקסט שמוצג למשתמש
+        function updateDisplay(data) {
+            document.getElementById('nameDisplay').innerText = data.name || "---";
+            document.getElementById('ageDisplay').innerText = data.age || "---";
+        }
     </script>
 
 </body>

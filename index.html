@@ -1796,7 +1796,6 @@ html.scheme-galaxy.light{--bg:#faf8ff;--bg2:#f0eeff;--bg3:#e4deff;--card:#fff;--
     <!-- Color Scheme card -->
     <!-- Language card -->
     <!-- Storage info card -->
-    <!-- Chests card -->
     <!-- Achievements card -->
     <!-- API Key card -->
     <div style="height:16px"></div>
@@ -3852,11 +3851,12 @@ function renderChestBadges(){
   el.innerHTML=tiers.map(tier=>{
     const cnt=chests[tier]||0;
     const isEmpty=cnt===0;
-    return `<div class="chest-tile chest-tile-${tier}${isEmpty?' empty':''}" ${isEmpty?'':`onclick="openChest('${tier}')"`}>
+    const hoverLbl=isEmpty?(lang==='en'?'How to earn':'איך להשיג'):(lang==='en'?'Open':'פתח');
+    return `<div class="chest-tile chest-tile-${tier}${isEmpty?' empty':''}" onclick="showChestTileAction('${tier}')" style="${isEmpty?'opacity:.55':''}">
       <span class="chest-tile-ico">${icons[tier]}</span>
       <div class="chest-tile-cnt">${cnt}</div>
       <div class="chest-tile-name">${names[tier]}</div>
-      ${isEmpty?'':'<div class="chest-tile-open">'+openLbl+'</div>'}
+      <div class="chest-tile-open">${hoverLbl}</div>
     </div>`;
   }).join('');
 }
@@ -4456,8 +4456,11 @@ function chestNotifTap(){
   }
   if(left<=0){
     const h=document.getElementById('cnaHint');
-    if(h)h.textContent=lang==='en'?'Opening!':'\u05e0\u05e4\u05ea\u05d7!';
-    setTimeout(()=>{ov.remove();chestShowing=false;_openChestNow(tier);},400);
+    if(h)h.textContent=lang==='en'?'Opening!':'נפתח!';
+    const card=document.getElementById('chestNotifCard');
+    if(card){card.style.transform='scale(1.12)';card.style.transition='transform .18s';}
+    ov.style.pointerEvents='none';
+    setTimeout(()=>{ov.remove();chestShowing=false;_openChestNow(tier);},320);
   } else {
     const h=document.getElementById('cnaHint');
     if(h)h.textContent=lang==='en'?(left===2?'2 more taps\u2026':'1 more tap\u2026'):(left===2?'\u05e2\u05d5\u05d3 2 \u05dc\u05d7\u05d9\u05e6\u05d5\u05ea\u2026':'\u05e2\u05d5\u05d3 \u05dc\u05d7\u05d9\u05e6\u05d4 \u05d0\u05d7\u05ea\u2026');
@@ -4701,6 +4704,41 @@ function showSpecialMissionCard(task){
   setTimeout(()=>banner.remove(),5000);
 }
 
+      function showChestTileAction(tier){
+  const cnt=chests[tier]||0;
+  const td=CHEST_TIERS[tier];
+  const ci=CHEST_INFO_DATA[tier];
+  const tierName=lang==='en'?td.nameEn:td.name;
+  const earnLines=(lang==='en'?ci.earn.en:ci.earn.he).split('\n');
+  const getLines=(lang==='en'?ci.get.en:ci.get.he).split('\n');
+  const icons={common:'📦',rare:'💎',epic:'👑'};
+  const renderLines=lines=>lines.map(l=>'<div style="padding:6px 0;font-size:12px;color:var(--ink2);border-bottom:1px solid var(--brd)">'+l+'</div>').join('');
+  document.getElementById('chestTileMenuOv')?.remove();
+  const ov=document.createElement('div');
+  ov.id='chestTileMenuOv';
+  ov.style.cssText='position:fixed;inset:0;z-index:9900;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:0';
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const openBtn=cnt>0
+    ?`<button onclick="document.getElementById('chestTileMenuOv').remove();openChest('${tier}')" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--v1),var(--teal));border:none;border-radius:14px;color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">${lang==='en'?'🎁 Open Now ('+cnt+')':'🎁 פתח עכשיו ('+cnt+')'}</button>`
+    :`<div style="background:var(--bg3);border:1px solid var(--brd2);border-radius:14px;padding:12px;text-align:center;margin-bottom:8px;font-family:'Syne',sans-serif;font-size:13px;color:var(--fog)">${lang==='en'?'No chests yet — earn by completing tasks!':'אין תיבות עדיין — השג על ידי השלמת משימות!'}</div>`;
+  ov.innerHTML='<div style="width:100%;max-width:440px;background:var(--card);border-radius:24px 24px 0 0;padding:20px 18px calc(22px + var(--sab));max-height:78dvh;overflow-y:auto">'
+    +'<div style="width:36px;height:4px;background:var(--brd2);border-radius:2px;margin:0 auto 16px"></div>'
+    +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">'
+      +'<span style="font-size:28px">'+icons[tier]+'</span>'
+      +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:var(--ink)">'+tierName+'</div>'
+      +(cnt>0?'<div style="margin-inline-start:auto;font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:var(--v2)">'+cnt+' '+(lang==='en'?'available':'זמינות')+'</div>':'')
+    +'</div>'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--fog);margin:12px 0 5px">'+(lang==='en'?'How to earn':'איך להשיג')+'</div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:8px 12px;margin-bottom:10px">'+renderLines(earnLines)+'</div>'
+    +'<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--fog);margin:0 0 5px">'+(lang==='en'?'Possible rewards':'פרסים אפשריים')+'</div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:8px 12px;margin-bottom:16px">'+renderLines(getLines)+'</div>'
+    +openBtn
+    +'<button onclick="document.getElementById(\'chestTileMenuOv\').remove()" style="width:100%;padding:12px;background:var(--bg3);border:1.5px solid var(--brd2);border-radius:14px;font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:var(--ink2);cursor:pointer">'+(lang==='en'?'Close':'סגור')+'</button>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+
+      
 function wireAll(){
   document.getElementById('lootOv')?.addEventListener('click',e=>{if(e.target.id==='lootOv'){closeLootOv();chestCracked=false;}});
 
@@ -4958,6 +4996,16 @@ document.addEventListener('DOMContentLoaded',()=>{loadTheme();loadScheme();loadL
       <div class="stg-row" onclick="showChestInfo('rare')" style="cursor:pointer"><span class="stg-row-ico">💎</span><div class="stg-row-body"><div class="stg-row-title" id="sChestRareT">תיבה נדירה</div><div class="stg-row-sub">כל 5 רמות • Streak 7/14 • יום מושלם</div></div><span class="stg-arr">›</span></div>
       <div class="stg-row stg-row-last" onclick="showChestInfo('epic')" style="cursor:pointer"><span class="stg-row-ico">👑</span><div class="stg-row-body"><div class="stg-row-title" id="sChestEpicT">תיבה אפית</div><div class="stg-row-sub">כל 10 רמות • Streak 30+</div></div><span class="stg-arr">›</span></div>
     </div>
+      <div class="stg-group">
+  <div class="stg-group-label" id="sChestGroupLabel">📦 תיבות בוסט</div>
+  <div class="stg-row stg-row-first stg-row-last stg-row-col" style="gap:12px">
+    <div style="display:flex;align-items:center;gap:10px;width:100%">
+      <span class="stg-row-ico">📦</span>
+      <div class="stg-row-title" id="chestsCardTitle">תיבות בוסט</div>
+      <div style="margin-inline-start:auto;font-size:11px;color:var(--mist)" id="chestsHint">לחץ לפתיחה</div>
+    </div>
+    <div class="chests-grid" id="chestBadgesRow" style="width:100%"></div>
+  </div>
     <div class="stg-group">
       <div class="stg-group-label" id="sSecAccount">חשבון</div>
       <div class="stg-row stg-row-first">
